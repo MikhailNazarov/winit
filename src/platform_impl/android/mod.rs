@@ -457,8 +457,13 @@ impl<T: 'static> EventLoop<T> {
                     // that the application can react to it; without
                     // this, the system would finish the activity without
                     // the application ever knowing
+                    // The back button requests the window to close; the
+                    // event is forwarded to the application AND marked as
+                    // unhandled, so that the system finishes the activity
+                    // (which it does more reliably than the application
+                    // on some devices)
                     Keycode::Back if key.action() == KeyAction::Down => {
-                        input_status = InputStatus::Handled;
+                        input_status = InputStatus::Unhandled;
 
                         tracing::info!("Back button pressed");
 
