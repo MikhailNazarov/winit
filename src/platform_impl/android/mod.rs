@@ -436,6 +436,21 @@ impl<T: 'static> EventLoop<T> {
                     {
                         input_status = InputStatus::Unhandled
                     },
+                    // The back button requests the window to close, so
+                    // that the application can react to it; without
+                    // this, the system would finish the activity without
+                    // the application ever knowing
+                    Keycode::Back if key.action() == KeyAction::Down => {
+                        input_status = InputStatus::Handled;
+
+                        callback(
+                            event::Event::WindowEvent {
+                                window_id: window::WindowId(WindowId),
+                                event: event::WindowEvent::CloseRequested,
+                            },
+                            self.window_target(),
+                        );
+                    },
                     keycode => {
                         let state = match key.action() {
                             KeyAction::Down => event::ElementState::Pressed,
