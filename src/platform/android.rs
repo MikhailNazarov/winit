@@ -167,6 +167,16 @@ impl<T> EventLoopBuilderExtAndroid for EventLoopBuilder<T> {
 /// #[cfg(target_os = "android")]
 /// use winit::platform::android::activity::AndroidApp;
 /// ```
+/// Returns `true` if the activity that spawned the running event loop
+/// was destroyed by the system.
+///
+/// The mainloop exits when that happens, so that the system can
+/// recreate the activity; the application should let `android_main`
+/// return then.
+pub fn activity_destroyed() -> bool {
+    crate::platform_impl::android::activity_destroyed()
+}
+
 pub mod activity {
     // We enable the `"native-activity"` feature just so that we can build the
     // docs, but it'll be very confusing for users to see the docs with that

@@ -131,6 +131,17 @@ impl RedrawRequester {
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct KeyEventExtra {}
 
+/// Whether the activity that spawned the running event loop was
+/// destroyed by the system.
+pub(crate) static DESTROYED: AtomicBool = AtomicBool::new(false);
+
+/// Returns `true` if the activity that spawned the running event loop
+/// was destroyed by the system; i.e. the mainloop exited because of a
+/// `Destroy` event and not because the application closed itself.
+pub fn activity_destroyed() -> bool {
+    DESTROYED.load(Ordering::Relaxed)
+}
+
 pub struct EventLoop<T: 'static> {
     pub(crate) android_app: AndroidApp,
     window_target: event_loop::ActiveEventLoop,
@@ -162,6 +173,9 @@ impl<T: 'static> EventLoop<T> {
         attributes: &PlatformSpecificEventLoopAttributes,
     ) -> Result<Self, EventLoopError> {
         let (user_events_sender, user_events_receiver) = mpsc::channel();
+
+        // Every `android_main` invocation gets a fresh activity
+        DESTROYED.store(false, Ordering::Relaxed);
 
         let android_app = attributes.android_app.as_ref().expect(
             "An `AndroidApp` as passed to android_main() is required to create an `EventLoop` on \
@@ -289,9 +303,12 @@ impl<T: 'static> EventLoop<T> {
                 MainEvent::Destroy => {
                     // The activity is destroyed when the application is
                     // recreated (i.e. on configuration changes); the glue
-                    // waits for `android_main` to return, so the mainloop
-                    // must exit for the recreation to continue
+                    // waits for `android_main` to return before the
+                    // recreation can continue
                     debug!("App destroyed - exiting mainloop");
+
+                    DESTROYED.store(true, Ordering::Relaxed);
+
                     self.window_target().exit();
                 },
                 MainEvent::InsetsChanged { .. } => {
