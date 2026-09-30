@@ -119,9 +119,13 @@ impl<T> EventLoopBuilder<T> {
         // configuration changes (like theme switches), calling
         // `android_main` again; every invocation runs on its own thread
         // with its own looper, so a new event loop is safe to create
-        if EVENT_LOOP_CREATED.swap(true, Ordering::Relaxed) && !cfg!(android_platform) {
+        #[cfg(not(android_platform))]
+        if EVENT_LOOP_CREATED.swap(true, Ordering::Relaxed) {
             return Err(EventLoopError::RecreationAttempt);
         }
+
+        #[cfg(android_platform)]
+        EVENT_LOOP_CREATED.store(true, Ordering::Relaxed);
 
         // Certain platforms accept a mutable reference in their API.
         #[allow(clippy::unnecessary_mut_passed)]
