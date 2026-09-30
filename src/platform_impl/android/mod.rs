@@ -454,14 +454,10 @@ impl<T: 'static> EventLoop<T> {
                         input_status = InputStatus::Unhandled
                     },
                     // The back button requests the window to close, so
-                    // that the application can react to it; without
-                    // this, the system would finish the activity without
-                    // the application ever knowing
-                    // The back button requests the window to close; the
-                    // event is forwarded to the application AND marked as
-                    // unhandled, so that the system finishes the activity
-                    // (which it does more reliably than the application
-                    // on some devices)
+                    // that the application can react to it. The event is
+                    // also marked as unhandled, so that the system
+                    // finishes the activity (which it does more reliably
+                    // than the application on some devices)
                     Keycode::Back if key.action() == KeyAction::Down => {
                         input_status = InputStatus::Unhandled;
 
@@ -488,6 +484,17 @@ impl<T: 'static> EventLoop<T> {
                             &mut self.combining_accent,
                         );
 
+                        // The produced character is the text of the key
+                        // press; soft keyboards deliver text through key
+                        // events
+                        let text = match (&state, key_char.as_ref()) {
+                            (
+                                event::ElementState::Pressed,
+                                android_activity::input::KeyMapChar::Unicode(c),
+                            ) => Some(smol_str::SmolStr::from_iter([*c])),
+                            _ => None,
+                        };
+
                         let event = event::Event::WindowEvent {
                             window_id: window::WindowId(WindowId),
                             event: event::WindowEvent::KeyboardInput {
@@ -498,7 +505,7 @@ impl<T: 'static> EventLoop<T> {
                                     logical_key: keycodes::to_logical(key_char, keycode),
                                     location: keycodes::to_location(keycode),
                                     repeat: key.repeat_count() > 0,
-                                    text: None,
+                                    text,
                                     platform_specific: KeyEventExtra {},
                                 },
                                 is_synthetic: false,
