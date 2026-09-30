@@ -287,9 +287,12 @@ impl<T: 'static> EventLoop<T> {
                     warn!("TODO: forward onStop notification to application");
                 },
                 MainEvent::Destroy => {
-                    // XXX: maybe exit mainloop to drop things before being
-                    // killed by the OS?
-                    warn!("TODO: forward onDestroy notification to application");
+                    // The activity is destroyed when the application is
+                    // recreated (i.e. on configuration changes), and the
+                    // system starts a new one in a fresh process; exit the
+                    // mainloop so that `android_main` can return
+                    debug!("App destroyed - exiting mainloop");
+                    self.window_target().set_control_flow(ControlFlow::Exit);
                 },
                 MainEvent::InsetsChanged { .. } => {
                     // XXX: how to forward this state to applications?
@@ -570,11 +573,11 @@ impl<T: 'static> EventLoop<T> {
                     //
                     // For now, user_events and redraw_requests are the only reasons to expect
                     // a wake up here so we can ignore the wake up if there are no events/requests.
-                    // We also ignore wake ups while suspended.
+                    //
+                    // Wake ups are processed while suspended, so that queued user
+                    // events are not stuck until the application is resumed again.
                     self.pending_redraw |= self.redraw_flag.get_and_reset();
-                    if !self.running
-                        || (!self.pending_redraw && !self.user_events_receiver.has_incoming())
-                    {
+                    if !self.pending_redraw && !self.user_events_receiver.has_incoming() {
                         return;
                     }
                 },
