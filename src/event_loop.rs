@@ -115,7 +115,11 @@ impl<T> EventLoopBuilder<T> {
     pub fn build(&mut self) -> Result<EventLoop<T>, EventLoopError> {
         let _span = tracing::debug_span!("winit::EventLoopBuilder::build").entered();
 
-        if EVENT_LOOP_CREATED.swap(true, Ordering::Relaxed) {
+        // The system recreates the activity within the same process on
+        // configuration changes (like theme switches), calling
+        // `android_main` again; every invocation runs on its own thread
+        // with its own looper, so a new event loop is safe to create
+        if EVENT_LOOP_CREATED.swap(true, Ordering::Relaxed) && !cfg!(android_platform) {
             return Err(EventLoopError::RecreationAttempt);
         }
 
