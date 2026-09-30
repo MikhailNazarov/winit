@@ -173,6 +173,7 @@ impl<T> EventLoopBuilderExtAndroid for EventLoopBuilder<T> {
 /// The mainloop exits when that happens, so that the system can
 /// recreate the activity; the application should let `android_main`
 /// return then.
+#[cfg(android_platform)]
 pub fn activity_destroyed() -> bool {
     crate::platform_impl::android::activity_destroyed()
 }
