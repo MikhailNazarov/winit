@@ -460,6 +460,8 @@ impl<T: 'static> EventLoop<T> {
                     Keycode::Back if key.action() == KeyAction::Down => {
                         input_status = InputStatus::Handled;
 
+                        log::info!("Back button pressed");
+
                         callback(
                             event::Event::WindowEvent {
                                 window_id: window::WindowId(WindowId),
