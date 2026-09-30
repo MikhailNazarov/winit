@@ -288,11 +288,10 @@ impl<T: 'static> EventLoop<T> {
                 },
                 MainEvent::Destroy => {
                     // The activity is destroyed when the application is
-                    // recreated (i.e. on configuration changes), and the
-                    // system starts a new one in a fresh process; exit the
-                    // mainloop so that `android_main` can return
-                    debug!("App destroyed - exiting mainloop");
-                    self.window_target().set_control_flow(ControlFlow::Exit);
+                    // recreated (i.e. on configuration changes); the
+                    // recreated activity calls `android_main` again, and
+                    // the application is expected to exit the process
+                    warn!("The activity was destroyed; exiting is up to the application");
                 },
                 MainEvent::InsetsChanged { .. } => {
                     // XXX: how to forward this state to applications?
