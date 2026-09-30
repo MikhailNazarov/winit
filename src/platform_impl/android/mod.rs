@@ -490,7 +490,7 @@ impl<T: 'static> EventLoop<T> {
                         let text = match (&state, key_char.as_ref()) {
                             (
                                 event::ElementState::Pressed,
-                                android_activity::input::KeyMapChar::Unicode(c),
+                                Some(android_activity::input::KeyMapChar::Unicode(c)),
                             ) => Some(smol_str::SmolStr::from_iter([*c])),
                             _ => None,
                         };
