@@ -292,7 +292,7 @@ impl<T: 'static> EventLoop<T> {
                     // system starts a new one in a fresh process; exit the
                     // mainloop so that `android_main` can return
                     debug!("App destroyed - exiting mainloop");
-                    self.window_target().set_control_flow(ControlFlow::Exit);
+                    self.window_target().exit();
                 },
                 MainEvent::InsetsChanged { .. } => {
                     // XXX: how to forward this state to applications?
